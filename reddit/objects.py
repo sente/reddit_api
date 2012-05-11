@@ -275,7 +275,29 @@ class Comment(Approvable, Deletable, Distinguishable, Editable, Inboxable,
         for reply in self._replies:
             reply._update_submission(submission)
 
-    def json_encode(self,recurse=False):
+
+    def json_encode(self):
+        d = {}
+        for field in self.__dict__.keys():
+            if field.startswith('_') or field == 'reddit_session':
+                continue
+
+            if isinstance(self.__dict__[field], Subreddit):
+                d[field] = self.__dict__[field].display_name
+
+            elif isinstance(self.__dict__[field], Redditor):
+                d[field] = self.__dict__[field].name
+
+            elif isinstance(self.__dict__[field],(str,unicode,list,dict)):
+                d[field] = self.__dict__[field]
+
+            elif self.__dict__[field] == None:
+                d[field] = None
+
+        return d
+
+
+    def json_encode2(self,recurse=False):
         d={}
         fields = ["body", "subreddit_id", "num_reports",
                 "author_flair_css_class", "created", "banned_by", "downs",
@@ -290,7 +312,7 @@ class Comment(Approvable, Deletable, Distinguishable, Editable, Inboxable,
         d['author'] = self.author.name
 
         if recurse:
-            d['replies'] = [r.json_encode(recurse) for r in self.replies]
+            d['replies'] = [r.json_encode2(recurse) for r in self.replies]
         return d
 
 

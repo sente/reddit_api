@@ -277,42 +277,21 @@ class Comment(Approvable, Deletable, Distinguishable, Editable, Inboxable,
 
 
     def json_encode(self):
+
         d = {}
-        for field in self.__dict__.keys():
-            if field.startswith('_') or field == 'reddit_session':
+        for key, value in self.__dict__.items():
+            if key.startswith('_') or key == 'reddit_session':
                 continue
 
-            if isinstance(self.__dict__[field], Subreddit):
-                d[field] = self.__dict__[field].display_name
+            if isinstance(value, Subreddit):
+                d[key] = value.display_name
 
-            elif isinstance(self.__dict__[field], Redditor):
-                d[field] = self.__dict__[field].name
+            elif isinstance(value, Redditor):
+                d[key] = value.name
 
-            elif isinstance(self.__dict__[field],(str,unicode,list,dict)):
-                d[field] = self.__dict__[field]
+            else:
+                d[key] = value
 
-            elif self.__dict__[field] == None:
-                d[field] = None
-
-        return d
-
-
-    def json_encode2(self,recurse=False):
-        d={}
-        fields = ["body", "subreddit_id", "num_reports",
-                "author_flair_css_class", "created", "banned_by", "downs",
-                "created_utc", "body_html", "link_id", "parent_id",
-                "approved_by", "likes", "author_flair_text", "ups", "id",
-                "name"]
-
-        for f in fields:
-            d[f] = getattr(self,f)
-
-        d['subreddit'] = self.subreddit.display_name
-        d['author'] = self.author.name
-
-        if recurse:
-            d['replies'] = [r.json_encode2(recurse) for r in self.replies]
         return d
 
 

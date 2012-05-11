@@ -79,6 +79,26 @@ class RedditContentObject(object):
             retval = retval.encode('utf-8')
         return retval
 
+
+    def to_dict(self):
+
+        d = {}
+        for key, value in self.__dict__.items():
+            if key.startswith('_') or key == 'reddit_session':
+                continue
+
+            if isinstance(value, Subreddit):
+                d[key] = value.display_name
+
+            elif isinstance(value, Redditor):
+                d[key] = value.name
+
+            else:
+                d[key] = value
+
+        return d
+
+
     def _get_json_dict(self):
         response = self.reddit_session.request_json(self._info_url,
                                                     as_objects=False)
@@ -263,6 +283,15 @@ class Comment(Approvable, Deletable, Distinguishable, Editable, Inboxable,
             self._replies = None
         self._submission = None
 
+
+    def to_dict(self, include_replies=True):
+        d = super(Comment, self).to_dict()
+        if include_replies:
+            d['replies'] = [child.to_dict(include_replies=include_replies) for
+                    child in self.replies]
+        return d
+
+
     @limit_chars()
     def __unicode__(self):
         return getattr(self, 'body', '[Unloaded Comment]')
@@ -276,23 +305,6 @@ class Comment(Approvable, Deletable, Distinguishable, Editable, Inboxable,
             reply._update_submission(submission)
 
 
-    def json_encode(self):
-
-        d = {}
-        for key, value in self.__dict__.items():
-            if key.startswith('_') or key == 'reddit_session':
-                continue
-
-            if isinstance(value, Subreddit):
-                d[key] = value.display_name
-
-            elif isinstance(value, Redditor):
-                d[key] = value.name
-
-            else:
-                d[key] = value
-
-        return d
 
 
     @property
@@ -501,6 +513,14 @@ class Submission(Approvable, Deletable, Distinguishable, Editable, Reportable,
         self._comments = None
         self._comments_flat = None
         self._orphaned = {}
+
+
+    def to_dict(self, include_comments=True):
+        d = super(Submission, self).to_dict()
+        if include_comments:
+            d['comments'] = [child.to_dict(include_replies=True) for child in
+                    self._comments]
+        return d
 
     def __unicode__(self):
         title = self.title.replace('\r\n', ' ')

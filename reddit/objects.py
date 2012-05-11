@@ -275,6 +275,25 @@ class Comment(Approvable, Deletable, Distinguishable, Editable, Inboxable,
         for reply in self._replies:
             reply._update_submission(submission)
 
+    def json_encode(self,recurse=False):
+        d={}
+        fields = ["body", "subreddit_id", "num_reports",
+                "author_flair_css_class", "created", "banned_by", "downs",
+                "created_utc", "body_html", "link_id", "parent_id",
+                "approved_by", "likes", "author_flair_text", "ups", "id",
+                "name"]
+
+        for f in fields:
+            d[f] = getattr(self,f)
+
+        d['subreddit'] = self.subreddit.display_name
+        d['author'] = self.author.name
+
+        if recurse:
+            d['replies'] = [r.json_encode(recurse) for r in self.replies]
+        return d
+
+
     @property
     def is_root(self):
         return self.parent_id is None

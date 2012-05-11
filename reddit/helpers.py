@@ -18,6 +18,7 @@ import six
 from six.moves import Request, quote, urlencode, urljoin
 from reddit.decorators import Memoize, SleepAfter, require_login
 
+import pprint
 
 def _get_section(subpath=''):
     """
@@ -92,6 +93,12 @@ def _request(reddit_session, page_url, params=None, url_data=None, timeout=45):
             params.setdefault('uh', reddit_session.modhash)
         params = dict([k, v.encode('utf-8')] for k, v in six.iteritems(params))
         encoded_params = urlencode(params).encode('utf-8')
+
+    if reddit_session.config.debug_requests:
+        print 'page:%s' % page_url
+        print 'data:%s' % (encoded_params or 'None')
+        print "headers: %s\n" % (pprint.pformat(reddit_session.DEFAULT_HEADERS))
+
     request = Request(page_url, data=encoded_params,
                       headers=reddit_session.DEFAULT_HEADERS)
     # pylint: disable-msg=W0212
